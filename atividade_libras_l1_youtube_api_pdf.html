@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atividade L1 Libras - YouTube API + PDF</title>
+
+  <!-- Biblioteca para gerar PDF. Precisa de internet. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --azul: #102A43;
+      --azul2: #1D4E89;
+      --laranja: #F28C28;
+      --laranja2: #FFE8CC;
+      --fundo: #F7FAFC;
+      --branco: #FFFFFF;
+      --texto: #1F2933;
+      --cinza: #D9E2EC;
+      --verde: #2F855A;
+      --vermelho: #C53030;
+      --amarelo: #FFFBEA;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #F7FAFC 0%, #EAF4FF 100%);
+      color: var(--texto);
+      line-height: 1.5;
+    }
+
+    .app {
+      width: min(940px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    header {
+      background: var(--azul);
+      color: white;
+      border-radius: 22px;
+      padding: 24px 18px;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(16,42,67,0.18);
+      margin-bottom: 18px;
+    }
+
+    header .tag {
+      display: inline-block;
+      background: var(--laranja);
+      color: var(--azul);
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    h1 {
+      margin: 4px 0 10px;
+      font-size: clamp(1.6rem, 6vw, 2.7rem);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      opacity: 0.95;
+    }
+
+    .card {
+      background: var(--branco);
+      border: 1px solid var(--cinza);
+      border-radius: 22px;
+      padding: 18px;
+      margin: 16px 0;
+      box-shadow: 0 8px 24px rgba(16,42,67,0.08);
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      color: var(--azul);
+      font-size: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      color: var(--azul);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px;
+      border: 2px solid var(--cinza);
+      border-radius: 14px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--laranja);
+      box-shadow: 0 0 0 4px rgba(242,140,40,0.18);
+    }
+
+    .video-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 10px 24px rgba(16,42,67,0.16);
+      margin-top: 12px;
+      position: relative;
+      min-height: 220px;
+    }
+
+    #player {
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+    }
+
+    .video-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .question {
+      border: 2px solid #E6EEF8;
+      border-radius: 20px;
+      padding: 16px;
+      margin: 14px 0;
+      background: #FBFDFF;
+    }
+
+    .question h3 {
+      margin: 0 0 10px;
+      color: var(--azul);
+      font-size: 1.1rem;
+    }
+
+    .visual-box {
+      background: var(--laranja2);
+      border: 2px dashed var(--laranja);
+      border-radius: 18px;
+      padding: 14px;
+      margin: 10px 0 14px;
+      text-align: center;
+      color: var(--azul);
+      font-weight: 700;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border: 2px solid var(--cinza);
+      border-radius: 16px;
+      padding: 12px;
+      cursor: pointer;
+      background: white;
+      transition: 0.2s;
+    }
+
+    .option:hover {
+      border-color: var(--laranja);
+      transform: translateY(-1px);
+    }
+
+    .option input {
+      width: 22px;
+      height: 22px;
+      min-height: 22px;
+      margin-top: 2px;
+      accent-color: var(--laranja);
+    }
+
+    .actions {
+      display: grid;
+      gap: 12px;
+      position: sticky;
+      bottom: 0;
+      background: rgba(247,250,252,0.95);
+      padding: 12px 0 0;
+      backdrop-filter: blur(10px);
+    }
+
+    button, .email-button, .link-button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      min-height: 54px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 12px 16px;
+    }
+
+    .primary { background: var(--laranja); color: var(--azul); }
+    .secondary { background: var(--azul2); color: white; }
+    .ghost { background: white; color: var(--azul); border: 2px solid var(--cinza); }
+
+    .status {
+      display: none;
+      border-radius: 18px;
+      padding: 14px;
+      margin-top: 12px;
+      font-weight: 700;
+    }
+
+    .status.ok {
+      display: block;
+      background: #E6FFFA;
+      color: var(--verde);
+      border: 2px solid #9AE6B4;
+    }
+
+    .status.erro {
+      display: block;
+      background: #FFF5F5;
+      color: var(--vermelho);
+      border: 2px solid #FEB2B2;
+    }
+
+    .status.info {
+      display: block;
+      background: #EBF8FF;
+      color: var(--azul2);
+      border: 2px solid #90CDF4;
+    }
+
+    #resumo {
+      white-space: pre-wrap;
+      background: #F8FAFC;
+      border: 2px solid var(--cinza);
+      padding: 14px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      overflow-wrap: anywhere;
+    }
+
+    .small {
+      font-size: 0.9rem;
+      color: #52616B;
+      margin-top: 8px;
+    }
+
+    .alerta {
+      background: var(--amarelo);
+      border: 2px solid #F0B429;
+      color: #513C06;
+      border-radius: 16px;
+      padding: 12px;
+      font-size: 0.95rem;
+      margin-top: 12px;
+    }
+
+    footer {
+      text-align: center;
+      color: #52616B;
+      padding: 24px 8px;
+      font-size: 0.88rem;
+    }
+
+    @media (min-width: 760px) {
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .actions {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      .video-actions {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="tag">Libras L1 • Atividade com vídeo</div>
+      <h1>Narrativa Visual em Libras</h1>
+      <p class="subtitle">Assista ao vídeo, responda 5 perguntas e gere o PDF das respostas.</p>
+    </header>
+
+    <section class="card">
+      <h2 class="section-title">Vídeo para observar</h2>
+      <p>Assista ao vídeo abaixo. Depois responda as perguntas pensando em expressão visual, corpo, espaço e narrativa em Libras.</p>
+
+      <div class="video-frame">
+        <div id="player"></div>
+      </div>
+
+      <div id="videoStatus" class="status info">
+        Carregando vídeo do YouTube...
+      </div>
+
+      <div class="video-actions">
+        <button class="primary" type="button" onclick="playVideo()">Assistir vídeo</button>
+        <button class="ghost" type="button" onclick="pauseVideo()">Pausar</button>
+        <a class="link-button secondary" href="https://www.youtube.com/watch?v=Zts2IBw4Cb4" target="_blank" rel="noopener">Abrir no YouTube</a>
+      </div>
+
+      <p class="small">
+        Esta versão usa a YouTube IFrame Player API. Se o vídeo não aparecer, pode ser bloqueio da internet, bloqueio do YouTube na escola, ou o dono do vídeo pode não permitir incorporação.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Identificação</h2>
+
+      <div class="grid-2">
+        <div>
+          <label for="nome">Nome do estudante</label>
+          <input id="nome" type="text" placeholder="Digite seu nome completo" autocomplete="name" />
+        </div>
+
+        <div>
+          <label for="turma">Número da turma</label>
+          <input id="turma" type="text" placeholder="Ex.: Turma 101 / 2º ano" />
+        </div>
+      </div>
+
+      <label for="data">Data da atividade</label>
+      <input id="data" type="date" />
+
+      <p class="small">Tema: Literatura Surda, vídeo em Libras e análise de narrativa visual.</p>
+    </section>
+
+    <form id="atividade">
+      <section class="card">
+        <h2 class="section-title">5 perguntas</h2>
+
+        <div class="question">
+          <h3>1. No vídeo, qual elemento visual chamou mais atenção?</h3>
+          <div class="visual-box">Observe o corpo, o rosto, o olhar, o espaço e o movimento.</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q1" value="Expressão facial" /> <span>Expressão facial</span></label>
+            <label class="option"><input type="radio" name="q1" value="Movimento do corpo" /> <span>Movimento do corpo</span></label>
+            <label class="option"><input type="radio" name="q1" value="Uso do espaço" /> <span>Uso do espaço</span></label>
+            <label class="option"><input type="radio" name="q1" value="Configuração de mão" /> <span>Configuração de mão</span></label>
+          </div>
+        </div>
+
+        <div class="question">
+          <h3>2. Como o sinalizante mostra mudança de personagem ou foco?</h3>
+          <div class="visual-box">Pense em direção do corpo, olhar e posição no espaço.</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q2" value="Mudança de direção do corpo e olhar" /> <span>Mudança de direção do corpo e olhar</span></label>
+            <label class="option"><input type="radio" name="q2" value="Somente com legenda em português" /> <span>Somente com legenda em português</span></label>
+            <label class="option"><input type="radio" name="q2" value="Sem mudar nada no corpo" /> <span>Sem mudar nada no corpo</span></label>
+          </div>
+        </div>
+
+        <div class="question">
+          <h3>3. O espaço em Libras ajudou a organizar a história?</h3>
+          <div class="visual-box">Observe se lugares, personagens ou ações ficam em pontos diferentes.</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q3" value="Sim, ajudou a organizar a história" /> <span>Sim, ajudou a organizar a história</span></label>
+            <label class="option"><input type="radio" name="q3" value="Mais ou menos, algumas partes ficaram claras" /> <span>Mais ou menos, algumas partes ficaram claras</span></label>
+            <label class="option"><input type="radio" name="q3" value="Não, o espaço não ajudou" /> <span>Não, o espaço não ajudou</span></label>
+          </div>
+        </div>
+
+        <div class="question">
+          <h3>4. Qual parte parece mais importante para entender o sentido do vídeo?</h3>
+          <div class="visual-box">Pense no começo, desenvolvimento e final.</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q4" value="Começo da narrativa" /> <span>Começo da narrativa</span></label>
+            <label class="option"><input type="radio" name="q4" value="Conflito ou problema" /> <span>Conflito ou problema</span></label>
+            <label class="option"><input type="radio" name="q4" value="Final da narrativa" /> <span>Final da narrativa</span></label>
+            <label class="option"><input type="radio" name="q4" value="Expressão facial durante todo o vídeo" /> <span>Expressão facial durante todo o vídeo</span></label>
+          </div>
+        </div>
+
+        <div class="question">
+          <h3>5. Depois de assistir, qual atividade você gostaria de fazer em Libras?</h3>
+          <div class="visual-box">Escolha uma prática para apresentar depois.</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q5" value="Recontar o vídeo com minhas palavras em Libras" /> <span>Recontar o vídeo com minhas palavras em Libras</span></label>
+            <label class="option"><input type="radio" name="q5" value="Criar uma história parecida em Libras" /> <span>Criar uma história parecida em Libras</span></label>
+            <label class="option"><input type="radio" name="q5" value="Analisar expressão facial e corporal" /> <span>Analisar expressão facial e corporal</span></label>
+            <label class="option"><input type="radio" name="q5" value="Trabalhar em dupla para comparar ideias" /> <span>Trabalhar em dupla para comparar ideias</span></label>
+          </div>
+        </div>
+
+        <label for="comentario">Comentário opcional</label>
+        <textarea id="comentario" placeholder="Escreva uma dúvida, observação ou explicação curta."></textarea>
+
+        <div id="status" class="status"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Registro das respostas</h2>
+        <p class="small">Clique em “Registrar respostas” antes de gerar PDF. O resumo aparecerá aqui.</p>
+        <div id="resumo">Nenhuma resposta registrada ainda.</div>
+
+        <div class="actions">
+          <button type="button" class="primary" onclick="registrarRespostas()">Registrar respostas</button>
+          <button type="button" class="secondary" onclick="gerarPDF()">Gerar PDF das respostas</button>
+          <a id="emailLink" class="email-button ghost" href="#" onclick="return prepararEmail()">Abrir e-mail do professor</a>
+        </div>
+
+        <div class="alerta">
+          Importante: navegador não permite anexar PDF automaticamente pelo botão de e-mail. Primeiro baixe o PDF. Depois clique em “Abrir e-mail” e anexe o PDF manualmente.
+        </div>
+      </section>
+    </form>
+
+    <footer>
+      Protótipo de atividade HTML para celular • Libras L1 • YouTube API + respostas em PDF
+    </footer>
+  </main>
+
+  <script>
+    const professorEmail = "darleygoulartnunes@gmail.com";
+    const videoId = "Zts2IBw4Cb4";
+    const videoLink = "https://www.youtube.com/watch?v=" + videoId;
+    let player;
+
+    function setVideoStatus(tipo, mensagem) {
+      const el = document.getElementById("videoStatus");
+      el.className = "status " + tipo;
+      el.textContent = mensagem;
+    }
+
+    // Carrega a API do YouTube de forma assíncrona.
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName("script")[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // A API chama esta função quando terminar de carregar.
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player("player", {
+        width: "100%",
+        height: "100%",
+        videoId: videoId,
+        playerVars: {
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange,
+          onError: onPlayerError
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      setVideoStatus("ok", "Vídeo carregado. Clique em “Assistir vídeo”.");
+      // Não usa autoplay porque celular/navegador pode bloquear.
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        setVideoStatus("ok", "Vídeo em reprodução.");
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        setVideoStatus("info", "Vídeo pausado.");
+      } else if (event.data === YT.PlayerState.ENDED) {
+        setVideoStatus("ok", "Vídeo finalizado. Agora responda as perguntas.");
+      } else if (event.data === YT.PlayerState.BUFFERING) {
+        setVideoStatus("info", "Carregando vídeo...");
+      }
+    }
+
+    function onPlayerError(event) {
+      let mensagem = "Não foi possível carregar o vídeo incorporado.";
+      if (event.data === 2) {
+        mensagem = "Erro: ID do vídeo inválido.";
+      } else if (event.data === 5) {
+        mensagem = "Erro: o vídeo não pode ser reproduzido no player HTML5.";
+      } else if (event.data === 100) {
+        mensagem = "Erro: vídeo não encontrado, privado ou removido.";
+      } else if (event.data === 101 || event.data === 150) {
+        mensagem = "Erro: o dono do vídeo não permite reprodução incorporada. Use o botão “Abrir no YouTube”.";
+      } else if (event.data === 153) {
+        mensagem = "Erro: o YouTube pediu identificação/referer. Teste hospedando em site com HTTPS, como Netlify, Vercel ou GitHub Pages.";
+      }
+      setVideoStatus("erro", mensagem);
+    }
+
+    function playVideo() {
+      if (player && player.playVideo) {
+        player.playVideo();
+      } else {
+        setVideoStatus("erro", "Player ainda não carregou. Tente novamente em alguns segundos.");
+      }
+    }
+
+    function pauseVideo() {
+      if (player && player.pauseVideo) {
+        player.pauseVideo();
+      }
+    }
+
+    const perguntas = {
+      q1: "1. No vídeo, qual elemento visual chamou mais atenção?",
+      q2: "2. Como o sinalizante mostra mudança de personagem ou foco?",
+      q3: "3. O espaço em Libras ajudou a organizar a história?",
+      q4: "4. Qual parte parece mais importante para entender o sentido do vídeo?",
+      q5: "5. Depois de assistir, qual atividade você gostaria de fazer em Libras?"
+    };
+
+    const dataInput = document.getElementById("data");
+    dataInput.valueAsDate = new Date();
+
+    function respostaSelecionada(nome) {
+      const marcada = document.querySelector(`input[name="${nome}"]:checked`);
+      return marcada ? marcada.value : "";
+    }
+
+    function montarResumo() {
+      const nome = document.getElementById("nome").value.trim();
+      const turma = document.getElementById("turma").value.trim();
+      const data = document.getElementById("data").value;
+      const comentario = document.getElementById("comentario").value.trim();
+
+      let texto = "";
+      texto += "ATIVIDADE: Narrativa Visual em Libras - L1\n";
+      texto += "Vídeo: " + videoLink + "\n";
+      texto += "----------------------------------------\n";
+      texto += `Nome: ${nome || "Não informado"}\n`;
+      texto += `Turma: ${turma || "Não informada"}\n`;
+      texto += `Data: ${data || "Não informada"}\n\n`;
+
+      for (const chave in perguntas) {
+        texto += perguntas[chave] + "\n";
+        texto += "Resposta: " + (respostaSelecionada(chave) || "Não respondida") + "\n\n";
+      }
+
+      texto += "Comentário opcional:\n";
+      texto += comentario || "Sem comentário.";
+      texto += "\n\n----------------------------------------\n";
+      texto += "Registro gerado pela atividade HTML.";
+
+      return texto;
+    }
+
+    function validar() {
+      const nome = document.getElementById("nome").value.trim();
+      const turma = document.getElementById("turma").value.trim();
+      const data = document.getElementById("data").value;
+
+      if (!nome || !turma || !data) {
+        return "Preencha nome, turma e data.";
+      }
+
+      for (const chave in perguntas) {
+        if (!respostaSelecionada(chave)) {
+          return "Responda todas as 5 perguntas antes de gerar o PDF.";
+        }
+      }
+
+      return "";
+    }
+
+    function mostrarStatus(tipo, mensagem) {
+      const status = document.getElementById("status");
+      status.className = "status " + tipo;
+      status.textContent = mensagem;
+    }
+
+    function registrarRespostas() {
+      const erro = validar();
+      if (erro) {
+        mostrarStatus("erro", erro);
+        return false;
+      }
+
+      const resumo = montarResumo();
+      document.getElementById("resumo").textContent = resumo;
+      localStorage.setItem("atividade_libras_l1_resumo_pdf_api", resumo);
+      mostrarStatus("ok", "Respostas registradas. Agora pode gerar PDF.");
+      return true;
+    }
+
+    function nomeArquivoPDF() {
+      const nome = document.getElementById("nome").value.trim().replace(/\s+/g, "_") || "estudante";
+      const turma = document.getElementById("turma").value.trim().replace(/\s+/g, "_") || "turma";
+      const data = document.getElementById("data").value || "data";
+      return `atividade_libras_l1_${nome}_${turma}_${data}.pdf`;
+    }
+
+    function gerarPDF() {
+      const ok = registrarRespostas();
+      if (!ok) return;
+
+      if (!window.jspdf) {
+        mostrarStatus("erro", "Não foi possível carregar o gerador de PDF. Verifique a internet ou use imprimir/salvar como PDF no navegador.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+      const nome = document.getElementById("nome").value.trim();
+      const turma = document.getElementById("turma").value.trim();
+      const data = document.getElementById("data").value;
+      const comentario = document.getElementById("comentario").value.trim();
+
+      let y = 16;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Atividade de Libras L1", 14, y);
+      y += 8;
+
+      doc.setFontSize(12);
+      doc.text("Narrativa Visual em Libras", 14, y);
+      y += 10;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("Video: " + videoLink, 14, y);
+      y += 8;
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Identificacao", 14, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      doc.text("Nome: " + nome, 14, y); y += 6;
+      doc.text("Turma: " + turma, 14, y); y += 6;
+      doc.text("Data: " + data, 14, y); y += 10;
+
+      const blocos = [];
+      for (const chave in perguntas) {
+        blocos.push(perguntas[chave]);
+        blocos.push("Resposta: " + respostaSelecionada(chave));
+        blocos.push("");
+      }
+
+      blocos.push("Comentario opcional:");
+      blocos.push(comentario || "Sem comentario.");
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Respostas", 14, y);
+      y += 8;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+
+      blocos.forEach(linha => {
+        const linhasQuebradas = doc.splitTextToSize(linha, 180);
+        linhasQuebradas.forEach(parte => {
+          if (y > 280) {
+            doc.addPage();
+            y = 16;
+          }
+          doc.text(parte, 14, y);
+          y += 6;
+        });
+      });
+
+      doc.save(nomeArquivoPDF());
+      mostrarStatus("ok", "PDF gerado. Agora abra o e-mail e anexe o PDF baixado.");
+    }
+
+    function prepararEmail() {
+      const ok = registrarRespostas();
+      if (!ok) return false;
+
+      const nome = document.getElementById("nome").value.trim();
+      const turma = document.getElementById("turma").value.trim();
+      const assunto = `Atividade Libras L1 - PDF - ${nome} - ${turma}`;
+      const corpo =
+        "Olá, professor Darley.\n\n" +
+        "Segue em anexo o PDF da atividade de Libras L1.\n\n" +
+        "Nome: " + nome + "\n" +
+        "Turma: " + turma + "\n" +
+        "Data: " + document.getElementById("data").value + "\n\n" +
+        "Observação: o PDF foi gerado pela atividade HTML.\n";
+
+      const link = `mailto:${professorEmail}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+      window.location.href = link;
+      return false;
+    }
+
+    window.addEventListener("load", () => {
+      const salvo = localStorage.getItem("atividade_libras_l1_resumo_pdf_api");
+      if (salvo) {
+        document.getElementById("resumo").textContent = salvo;
+      }
+    });
+  </script>
+</body>
+</html>
